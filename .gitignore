@@ -13,3 +13,6 @@
 # Build
 /build
 *.so
+
+# experiment output data
+experiments/
