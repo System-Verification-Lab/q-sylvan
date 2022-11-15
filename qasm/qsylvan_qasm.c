@@ -1,7 +1,8 @@
 #include <popt.h>
 #include <sys/time.h>
+#include <libgen.h>
 
-#include "circuit_to_Sylvan.h"
+#include "qsylvan_qasm.h"
 
 /**
  * Obtain current wallclock time
@@ -13,6 +14,10 @@ wctime()
     gettimeofday(&tv, NULL);
     return (tv.tv_sec + 1E-6 * tv.tv_usec);
 }
+
+static double t_start;
+#define INFO(s, ...) fprintf(stdout, "[% 8.2f] " s, wctime()-t_start, ##__VA_ARGS__)
+#define Abort(...) { fprintf(stderr, __VA_ARGS__); fprintf(stderr, "Abort at line %d!\n", __LINE__); exit(-1); }
 
 void final_measure(QMDD qmdd, int* measurements, C_struct c_s, bool* results)
 {
@@ -737,25 +742,29 @@ QMDD run_c_struct(C_struct c_s, int* measurements, bool* results, bool experimen
  */
 int main(int argc, char *argv[])
 {
+    t_start = wctime();
     // Initialise flag parameters
     int flag_help = -1;
     char *filename;
-    unsigned int runs = 100;
+    int workers = 1;
+    int wgt_norm_strat = NORM_LARGEST;
+    unsigned int runs = 1;
     unsigned int seed = 0;
     int matrix = 0;
     int balance = 0;
     int greedy = 0;
     int optimize = 0;
-    int experiment_time = 0;
     int intermediate_measuring = 0;
     int experiments = 0;
     bool intermediate_experiments;
-    QMDD qmdd;
+    char *csv_outputfile = NULL;
+    QMDD qmdd = AADD_TERMINAL;
     uint64_t res;
 
     poptContext con;
     struct poptOption optiontable[] = {
         { "help", 'h', POPT_ARG_NONE, &flag_help, 'h', "Display available options.", NULL },
+        { "workers", 'w', POPT_ARG_INT, &workers, 'w', "Number of workers (cores). Default = 1.", NULL },
         { "runs", 'r', POPT_ARG_INT, &runs, 'r', "Number of runs to perform. Default = 1.", NULL },
         { "seed", 's', POPT_ARG_INT, &seed, 's', "Randomness seed to be used (!= 0). Default seeded with time().", NULL },
         { "matrix", 'm', POPT_ARG_INT, &matrix, 'm', "Boundaray value of nodes in a DD before multiplying with the state vector.", NULL },
@@ -763,7 +772,8 @@ int main(int argc, char *argv[])
         { "balance", 'b', POPT_ARG_INT, &balance, 'b', "Runs the circuit switching between matrix-matrix method and greedy method", NULL },
         { "optimize", 'o', POPT_ARG_NONE, &optimize, 'o', "Optimize the circuit. This option will remove negating gates before running.", NULL },
         { "experiment", 'e', POPT_ARG_NONE, &experiments, 'e', "Prints the nodecount and palindrome signals.", NULL },
-        { "time", 't', POPT_ARG_NONE, &experiment_time, 't', "Prints the time taken to run the circuit.", NULL },
+        { "norm-strat", 9, POPT_ARG_INT, &wgt_norm_strat, 9, "Weight norm strat as int: <0(low)|1(largest)|2(l2)>.", NULL },
+        { "csv-output", 10, POPT_ARG_STRING, &csv_outputfile, 10, "Write stats to given filename (or append if file exists.", NULL },
         {NULL, 0, 0, NULL, 0, NULL, NULL}
     };
     con = poptGetContext("q-sylvan-sim", argc, (const char **)argv, optiontable, 0);
@@ -783,12 +793,13 @@ int main(int argc, char *argv[])
                 return 0;
         }
     }
-    printf("matrix %d\n", matrix);
-    printf("balance %d\n", balance);
-    printf("greedy %d\n", greedy);
-    printf("experiment_time %d\n", experiment_time);
-    printf("experiments %d\n", experiments);
-    printf("seed %d\n", seed);
+    INFO("Option workers=%d\n", workers);
+    INFO("Option norm-strat=%d\n", wgt_norm_strat);
+    INFO("Option matrix=%d\n", matrix);
+    INFO("Option balance=%d\n", balance);
+    INFO("Option greedy=%d\n", greedy);
+    INFO("Option experiments=%d\n", experiments);
+    INFO("Option rseed=%d\n", seed);
 
     // Set randomness seed
     if (seed == 0)
@@ -806,14 +817,13 @@ int main(int argc, char *argv[])
     start = wctime();
 
     // Standard Lace initialization
-    int workers = 1;
     lace_init(workers, 0);
     lace_startup(0, NULL, NULL);
 
     // Simple Sylvan initialization
     sylvan_set_sizes(1LL<<25, 1LL<<25, 1LL<<16, 1LL<<16);
     sylvan_init_package();
-    qsylvan_init_defaults(1LL<<23);
+    qsylvan_init_simulator(1LL<<23, -1, COMP_HASHMAP, wgt_norm_strat);
     qmdd_set_testing_mode(true); // turn on internal sanity tests
 
     // Create a circuit struct representing the QASM circuit in the given file
@@ -870,18 +880,50 @@ int main(int argc, char *argv[])
 
     // If experiments is true, print time
     end = wctime();
-    if (experiment_time)
-        printf("seconds: %lf\n", (end-start));
+    double runtime = end-start;
+    INFO("Circuit runtime: %lf\n", runtime);
 
-    if (!experiments && !experiment_time) {
+    if (!experiments) {
+        INFO("Measurement outcomes: (%d) measurements\n", runs);
         // Print reformatted circuit results if <show> is toggled
         for (BDDVAR i = 0; i < pow(2,c_s.bits); i++) {
             if (results[i] != 0) {
                 bit_print = int_to_bitarray(i,c_s.bits,true);
+                INFO("|");
                 for (BDDVAR j = 0; j < c_s.bits; j++) { printf("%d", bit_print[j]); }
-                printf(": %d\n", results[i]);
+                printf("> : %d\n", results[i]);
             }
         }
+    }
+
+    uint64_t final_nodecount = aadd_countnodes(qmdd);
+    double final_magnitude   = qmdd_get_magnitude(qmdd, c_s.qubits);
+    INFO("Nodecount of final state: %ld\n", final_nodecount);
+    INFO("Magnitude of final state: %.05lf\n", final_magnitude);
+    
+    if (csv_outputfile != NULL) {
+        INFO("Writing stats to %s\n", csv_outputfile);
+
+        FILE *fp = fopen(csv_outputfile, "a");
+        // write header if file is empty
+        fseek (fp, 0, SEEK_END);
+            long size = ftell(fp);
+            if (size == 0)
+                fprintf(fp, "%s\n", "algorithm, nqubits, tolerance, norm-strat, inv-cache, workers, runtime, final_nodecount, final_magnitude");
+        // append stats of this run
+        char *alg_name = basename(filename);
+        fprintf(fp, "%s, %d, %.3e, %d, %d, %d, %lf, %ld, %0.5lf\n",
+                alg_name,
+                c_s.qubits,
+                wgt_store_get_tol(),
+                weight_norm_strat,
+                1, // inverse caching, TODO: make this configerable
+                workers,
+                runtime,
+                final_nodecount,
+                final_magnitude);
+        fclose(fp);
+        free(csv_outputfile);
     }
 
     // Free variables
