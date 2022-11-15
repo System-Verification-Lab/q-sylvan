@@ -1,0 +1,65 @@
+// Benchmark was created by MQT Bench on 2022-08-30
+// For more information about MQT Bench, please visit https://www.cda.cit.tum.de/mqtbench/
+// MQT Bench version: 0.1.0
+// Qiskit version: {'qiskit-terra': '0.20.0', 'qiskit-aer': '0.10.4', 'qiskit-ignis': '0.7.0', 'qiskit-ibmq-provider': '0.19.0', 'qiskit-aqua': None, 'qiskit': '0.36.0', 'qiskit-nature': '0.3.1', 'qiskit-finance': '0.3.1', 'qiskit-optimization': '0.3.2', 'qiskit-machine-learning': '0.4.0'}
+
+OPENQASM 2.0;
+include "qelib1.inc";
+qreg q[5];
+creg meas[5];
+u3(0.076477565,0.99777472,0) q[0];
+u3(0.29374291,0.41262885,0) q[1];
+cx q[0],q[1];
+u3(0.31455578,0.38809943,0) q[2];
+cx q[0],q[2];
+cx q[1],q[2];
+u3(0.32179088,0.96491111,0) q[3];
+cx q[0],q[3];
+cx q[1],q[3];
+cx q[2],q[3];
+u3(0.76260578,0.39243475,0) q[4];
+cx q[0],q[4];
+u3(0.70867139,0.33924139,0) q[0];
+cx q[1],q[4];
+u3(0.24093867,0.47432315,0) q[1];
+cx q[0],q[1];
+cx q[2],q[4];
+u3(0.95366962,0.19833447,0) q[2];
+cx q[0],q[2];
+cx q[1],q[2];
+cx q[3],q[4];
+u3(0.99485242,0.42469333,0) q[3];
+cx q[0],q[3];
+cx q[1],q[3];
+cx q[2],q[3];
+u3(0.28558857,0.54368368,0) q[4];
+cx q[0],q[4];
+u3(0.79660029,0.65317579,0) q[0];
+cx q[1],q[4];
+u3(0.55841,0.67308523,0) q[1];
+cx q[0],q[1];
+cx q[2],q[4];
+u3(0.60501346,0.075684865,0) q[2];
+cx q[0],q[2];
+cx q[1],q[2];
+cx q[3],q[4];
+u3(0.3548471,0.64111006,0) q[3];
+cx q[0],q[3];
+cx q[1],q[3];
+cx q[2],q[3];
+u3(0.43366287,0.80816741,0) q[4];
+cx q[0],q[4];
+u3(0.52254106,0.25178964,0) q[0];
+cx q[1],q[4];
+u3(0.90660895,0.60624602,0) q[1];
+cx q[2],q[4];
+u3(0.76732302,0.22899503,0) q[2];
+cx q[3],q[4];
+u3(0.84897121,0.79845053,0) q[3];
+u3(0.2788222,0.76267888,0) q[4];
+barrier q[0],q[1],q[2],q[3],q[4];
+measure q[0] -> meas[0];
+measure q[1] -> meas[1];
+measure q[2] -> meas[2];
+measure q[3] -> meas[3];
+measure q[4] -> meas[4];
