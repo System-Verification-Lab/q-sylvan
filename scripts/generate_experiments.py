@@ -4,8 +4,8 @@ output_file = "experiments/bench_{}.sh"
 csv_output  = "experiments/bench_{}_res.csv"
 
 run_grov = "timeout {} ./build/examples/alg_run grover --qubits={} --norm-strat={} --tol={} --workers={} --csv-output={}\n"
-run_shor = "timeout {} ./build/examples/alg_run shor --shor-N={} --norm-strat={} --tol={} --workers={} --csv-output={}\n"
-run_sup  = "timeout {} ./build/examples/alg_run supremacy --qubits={} --depth={} --norm-strat={} --tol={} --workers={} --csv-output={}\n"
+run_shor = "timeout {} ./build/examples/alg_run shor --shor-N={} --norm-strat={} --tol={} --workers={} --rseed={} --csv-output={}\n"
+run_sup  = "timeout {} ./build/examples/alg_run supremacy --qubits={} --depth={} --norm-strat={} --tol={} --workers={} --rseed={} --csv-output={}\n"
 
 
 def init_output_file():
@@ -47,6 +47,7 @@ def experiments_shor():
     tol = [1e-14]
     norm_strat = ['largest']
     workers = [1,2]
+    rseed = 42
 
     with open(output_file, 'a') as f:
         f.write("# shor experiments\n")
@@ -54,7 +55,7 @@ def experiments_shor():
             for ns in norm_strat:
                 for t in tol:
                     for w in workers:
-                        f.write(run_shor.format(timeout, N, ns, t, w, csv_output))
+                        f.write(run_shor.format(timeout, N, ns, t, w, rseed, csv_output))
         f.write("\n")
 
 def experiments_supremacy():
@@ -66,6 +67,7 @@ def experiments_supremacy():
     tol = [1e-14]
     norm_strat = ['largest']
     workers = [1,2]
+    rseed = 42
 
     with open(output_file, 'a') as f:
         f.write("# supremacy experiments\n")
@@ -74,7 +76,7 @@ def experiments_supremacy():
                 for ns in norm_strat:
                     for t in tol:
                         for w in workers:
-                            f.write(run_sup.format(timeout, q, d, ns, t, w, csv_output))
+                            f.write(run_sup.format(timeout, q, d, ns, t, w, rseed, csv_output))
         f.write("\n")
 
 
