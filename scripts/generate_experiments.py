@@ -1,3 +1,5 @@
+import os
+import sys
 from datetime import datetime
 
 output_file = "experiments/bench_{}.sh"
@@ -6,7 +8,7 @@ csv_output  = "experiments/bench_{}_res.csv"
 run_grov = "timeout {} ./build/examples/alg_run grover --qubits={} --norm-strat={} --tol={} --workers={} --csv-output={}\n"
 run_shor = "timeout {} ./build/examples/alg_run shor --shor-N={} --norm-strat={} --tol={} --workers={} --rseed={} --csv-output={}\n"
 run_sup  = "timeout {} ./build/examples/alg_run supremacy --qubits={} --depth={} --norm-strat={} --tol={} --workers={} --rseed={} --csv-output={}\n"
-
+run_qasm = "timeout {} ./build/qasm/qsylvan_qasm {} --norm-strat={} --workers={} --seed={} --csv-output={}\n"
 
 def init_output_file():
     global output_file
@@ -58,6 +60,7 @@ def experiments_shor():
                         f.write(run_shor.format(timeout, N, ns, t, w, rseed, csv_output))
         f.write("\n")
 
+
 def experiments_supremacy():
 
     # configs to test
@@ -80,8 +83,37 @@ def experiments_supremacy():
         f.write("\n")
 
 
+def experiments_qasm():
+    
+    # configs to test
+    timeout = '10m'
+    norm_stat = [1] # 0 = low, 1 = largest, 2 = l2
+    workers = [1,2,4,8]
+    rseed = 42
+    max_num = 50
+    num = 0
+
+    with open(output_file, 'a') as f:
+        qasm_folder = 'qasm/circuits/MQTBench/'
+        f.write("# MQTBench\n")
+        for filename in os.listdir(qasm_folder):
+            filepath = qasm_folder + filename
+            if (num >= max_num):
+                break
+            for ns in norm_stat:
+                for w in workers:    
+                    f.write(run_qasm.format(timeout, filepath, ns, w, rseed, csv_output))
+            num += 1
+        f.write("\n")
+
+
 if __name__ == '__main__':
     init_output_file()
-    experiments_grover()
-    experiments_shor()
-    experiments_supremacy()
+
+    if (len(sys.argv) >= 2 and sys.argv[1] == 'qasm'):
+        experiments_qasm()
+    else:
+        experiments_grover()
+        experiments_shor()
+        experiments_supremacy()
+
