@@ -32,7 +32,7 @@ MAX_NUM_GATES = 4800         # Max number of gates per circuit
 STEPSIZE_NUM_GATES = 400     # Stepsize of the number of gates
 PERCENTAGE_T_GATES = 85      # Percentage T gates in quantum circuit
 
-#PRECISION = 16
+#PRECISION = 64
 #METHOD = 'MTBDD'
 #SIM_QASM_EXE = './../build/qasm/run_qasm_on_mtbdd'
 
@@ -40,7 +40,14 @@ PRECISION = 64
 METHOD = 'QMDDmax'
 SIM_QASM_EXE = './../build/qasm/run_qasm_on_qmdd'
 
-QASM_DIR  = f'qasm_clifford_T_mixed_{METHOD}_{PERCENTAGE_T_GATES}_percent_{MIN_NUM_QUBITS}_{MAX_NUM_QUBITS}_{MIN_NUM_GATES}_{MAX_NUM_GATES}/'
-JSON_DIR  = f'json_clifford_T_mixed_{METHOD}_{PERCENTAGE_T_GATES}_percent_{MIN_NUM_QUBITS}_{MAX_NUM_QUBITS}_{MIN_NUM_GATES}_{MAX_NUM_GATES}/'
-PLOTS_DIR = f'plot_clifford_T_mixed_{METHOD}_{PERCENTAGE_T_GATES}_percent_{MIN_NUM_QUBITS}_{MAX_NUM_QUBITS}_{MIN_NUM_GATES}_{MAX_NUM_GATES}/'
+# Random quantum circuits
+#QASM_DIR  = f'qasm_clifford_T_mixed_{METHOD}_{PERCENTAGE_T_GATES}_percent_{MIN_NUM_QUBITS}_{MAX_NUM_QUBITS}_{MIN_NUM_GATES}_{MAX_NUM_GATES}/'
+#JSON_DIR  = f'json_clifford_T_mixed_{METHOD}_{PERCENTAGE_T_GATES}_percent_{MIN_NUM_QUBITS}_{MAX_NUM_QUBITS}_{MIN_NUM_GATES}_{MAX_NUM_GATES}/'
+#PLOTS_DIR = f'plot_clifford_T_mixed_{METHOD}_{PERCENTAGE_T_GATES}_percent_{MIN_NUM_QUBITS}_{MAX_NUM_QUBITS}_{MIN_NUM_GATES}_{MAX_NUM_GATES}/'
+
+# MTQ Benchmark quantum circuits
+QASM_DIR  = f'MQTBench_2024-10-10-All-Qiskit-IBM-2-10'
+JSON_DIR  = f'json_MQTBench_2024-10-10-All-Qiskit-IBM-2-10'
+PLOTS_DIR = f'plot_MQTBench_2024-10-10-All-Qiskit-IBM-2-10'
+
 

@@ -64,8 +64,9 @@ def convert_all_qasm_files(softwareversion : str):
     qasm_files = [file for file in qasm_files if not file.startswith('2022', 0)]
 
     # Remove with regular expression, in this case: 
-    #pattern = r"^(a|b|c|d|e|f|[g]).*" # remove files starting with a or b or ...
-    #qasm_files = [file for file in qasm_files if not regular_expression.match(pattern, file)]
+
+    #   pattern = r"^(a|b|c|d|e|f|[g]).*" # remove files starting with a or b or ...
+    #   qasm_files = [file for file in qasm_files if not regular_expression.match(pattern, file)]
 
     #   runs into benchmark/qasm/grover-noancilla_indep_qiskit_10.qasm error
     #   GNU MP: Cannot allocate memory (size=17.565.568.910.312)

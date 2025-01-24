@@ -5,6 +5,7 @@ import json
 import re as regular_expression
 import pandas as pd
 import matplotlib.pyplot as plt
+import seaborn as sns
 
 import globals_pipeline as g
 
@@ -95,56 +96,60 @@ def convert_all_json_files_to_dataframe():
 # Plot functions
 #
 
-def generate_time_nr_qubits_plots(df):
+def generate_time_nr_qubits_plots_for_all_benchmarks(df):
+
+    # Get unigue benchmarks
+    benchmarks = sorted(df['statistics.benchmark'].str.split('_').str[0].unique())
+    print(f'Number of benchmarks = {len(benchmarks)}')
+
+    # Generate unique colors for each benchmark using seaborn color palette
+    palette = sns.color_palette('husl', len(benchmarks))
 
     # Plotting time and nr qubits
-    df_ae = (
-        df[
-            (df['statistics.benchmark'].str[0:2] == 'ae') & 
-            (df['precision'] == '64') & 
-            (df['method'] == 'MTBDD')
-          ]
-        .sort_values(by='statistics.n_qubits')
-        .plot(
-            x='statistics.n_qubits', 
-            y='statistics.simulation_time', 
-            kind='line', 
-            marker='o', 
-            color='blue')
-    )
-    df_ws = (
-        df[
-            (df['statistics.benchmark'].str[0:6] == 'wstate') & 
-            (df['precision'] == '64') & 
-            (df['method'] == 'MTBDD')
-          ]
-        .sort_values(by='statistics.n_qubits')
-        .plot(
-            x='statistics.n_qubits', 
-            y='statistics.simulation_time', 
-            kind='line', 
-            marker='o', 
-            color='red', 
-            ax=plt.gca())
-    )
+    plt.figure(figsize=(10,6))
+    for i, benchmark in enumerate(benchmarks):
+        
+        # Filter data for the current benchmark
+        df_benchmark = \
+            df[
+                (df['statistics.benchmark'].str.split('_').str[0] == benchmark) & 
+                (df['precision'] == '64') & 
+                (df['method'] == 'MTBDD')
+            ]
 
-    # 'r' (red)
-    # 'g' (green)
-    # 'b' (blue)
-    # 'c' (cyan)
-    # 'm' (magenta)
-    # 'y' (yellow)
-    # 'k' (black)
-    # 'w' (white)
+        # Plot scatter points
+        plt.scatter(
+            df_benchmark['statistics.n_qubits'], 
+            df_benchmark['statistics.simulation_time'], 
+            color=palette[i], 
+            label=benchmark, 
+            alpha=0.7,  # Transparency for overlapping points
+            edgecolors='k'  # Black edge for points
+        )
 
-    # Display the plot
-    plt.title('wstate red, ae blue')
-    plt.xlabel('qubits')
-    plt.ylabel('wall time (s)')
+    # Enhance plot
+    plt.title('Simulation time vs. number of qubits MTBDD 64 bit')
+    plt.xlabel('Number of qubits')
+    plt.ylabel('Wall Time (s)')
     plt.grid(True)
-    plt.savefig('benchmark/plot/time_nr_qubits.pdf')
+    plt.legend(title='Benchmarks MQT', loc='upper left', bbox_to_anchor=(1.05, 1), fontsize='small')
 
-    print("Plot for time qubits created")
+    # Set axis ranges and scales
+    plt.xlim(0, 20)  # Linear scale between 0 and 20
+    plt.yscale('log')  # Logarithmic scale for y-axis
+    plt.ylim(0.001, 10000)  # Logarithmic range between 0.001 and 100
+ 
+    # Adjust layout to fit legend
+    plt.tight_layout()
+
+    # Ensure output directory exists
+    os.makedirs(g.PLOTS_DIR, exist_ok=True)
+    plot_path = os.path.join(g.PLOTS_DIR, 'time_nr_qubits_scatter.pdf')
+    plt.savefig(plot_path)
+    print(f"Plot for time qubits created, saved at {plot_path}")
+        
+    # Clear the plot for reuse
+    plt.clf()
 
     return
 
@@ -158,7 +163,7 @@ def generate_time_time_method_plots(df):
     df_x = (
         df[
             (df['precision'] == '64') & 
-            (df['method'] == 'QMDD')
+            (df['method'] == 'QMDDmax')
           ]
     )
     df_y = (
@@ -183,8 +188,8 @@ def generate_time_time_method_plots(df):
     fig, ax = plt.subplots()
 
     ax.scatter(
-        df_x['statistics.simulation_time'], 
-        df_y['statistics.simulation_time'], 
+        sorted(df_x['statistics.simulation_time']), 
+        sorted(df_y['statistics.simulation_time']), 
         color='blue',
         marker='o'
         )
@@ -195,16 +200,89 @@ def generate_time_time_method_plots(df):
 
     # Set limits for both axes
     ax.set_xlim(0.0001, 100)
-    ax.set_ylim(0.0001, 100)
+    ax.set_ylim(0.001, 10000)
 
     # Display the plot
     plt.title('Wall time of all benchmarks, precision=64')
-    plt.xlabel('QMDD wall time (s)')
+    plt.xlabel('EVDD wall time (s)')
     plt.ylabel('MTBDD wall time (s)')
     plt.grid(True)
-    plt.savefig('benchmark/plot/time_time_method.pdf')
+
+   # Ensure the output directory exists
+    os.makedirs(g.PLOTS_DIR, exist_ok=True)
+    plt.savefig(g.PLOTS_DIR + f'/time_time_method_sorted.pdf')
 
     print("Plot for time time method created")
+
+    return
+
+#
+# Time against time plots
+#
+
+def generate_time_time_method_plots_for_all_benchmarks(df):
+
+    # Get unique benchmarks
+    benchmarks = sorted(df['statistics.benchmark'].str.split('_').str[0].unique())
+    print(f'Number of benchmarks = {len(benchmarks)}')
+
+    # Generate unique colors for each benchmark using seaborn color palette
+    palette = sns.color_palette('husl', len(benchmarks))
+
+    # Plotting time and nr qubits
+    plt.figure(figsize=(10,6))
+    for i, benchmark in enumerate(benchmarks):
+        
+        # Filter data for the current benchmark
+        df_benchmark_x = \
+            df[
+                (df['statistics.benchmark'].str.split('_').str[0] == benchmark) & 
+                (df['precision'] == '64') & 
+                (df['method'] == 'QMDDmax')
+            ]
+
+        # Filter data for the current benchmark
+        df_benchmark_y = \
+            df[
+                (df['statistics.benchmark'].str.split('_').str[0] == benchmark) & 
+                (df['precision'] == '64') & 
+                (df['method'] == 'MTBDD')
+            ]
+
+        # Plot scatter points
+        plt.scatter(
+            sorted(df_benchmark_x['statistics.simulation_time']), 
+            sorted(df_benchmark_y['statistics.simulation_time']), 
+            color=palette[i], 
+            label=benchmark, 
+            alpha=0.7,  # Transparency for overlapping points
+            edgecolors='k'  # Black edge for points
+        )
+
+    # Enhance plot
+    plt.title('Wall times MTBDD and EVDD, precision 64 bit')
+    plt.xlabel('Wall time (s) EVDD')
+    plt.ylabel('Wall time (s) MTBDD')
+    plt.grid(True)
+    plt.legend(title='Benchmarks MQT', loc='upper left', bbox_to_anchor=(1.05, 1), fontsize='small')
+
+    # Set axis ranges and scales
+    plt.xscale('log')  # Logarithmic scale for x-axis
+    plt.xlim(0.0001, 10)  
+    plt.yscale('log')  # Logarithmic scale for y-axis
+    plt.ylim(0.001, 10000)  
+ 
+    # Adjust layout to fit legend
+    plt.tight_layout()
+
+    # Ensure output directory exists
+    os.makedirs(g.PLOTS_DIR, exist_ok=True)
+    plot_path = os.path.join(g.PLOTS_DIR, 'time_time_scatter_sorted.pdf')
+    plt.savefig(plot_path)
+    print(f"Plot for time time created, saved at {plot_path}")
+        
+    # Clear the plot for reuse
+    plt.clf()
 
     return
 
@@ -218,7 +296,7 @@ def generate_time_time_per_node_plots(df):
     df_x = (
         df[
             (df['precision'] == '64') & 
-            (df['method'] == 'QMDD')
+            (df['method'] == 'QMDDmax')
           ]
     )
     df_x = df_x.assign(time_per_node = df_x['statistics.simulation_time'] / df_x['statistics.final_nodes'])
@@ -265,7 +343,10 @@ def generate_time_time_per_node_plots(df):
     plt.xlabel('QMDD wall time (s)')
     plt.ylabel('MTBDD wall time (s)')
     plt.grid(True)
-    plt.savefig('benchmark/plot/time_time_per_node.pdf')
+
+   # Ensure the output directory exists
+    os.makedirs(g.PLOTS_DIR, exist_ok=True)
+    plt.savefig(g.PLOTS_DIR + f'/time_time_per_node.pdf')
 
     print("Plot for time time methode per node created")
 
@@ -325,7 +406,10 @@ def generate_time_time_precision_plots(df):
     plt.xlabel('MTBDD 256 wall time (s)')
     plt.ylabel('MTBDD 64 wall time (s)')
     plt.grid(True)
-    plt.savefig('benchmark/plot/time_time_precision.pdf')
+
+   # Ensure the output directory exists
+    os.makedirs(g.PLOTS_DIR, exist_ok=True)
+    plt.savefig(g.PLOTS_DIR + f'/time_time_precision.pdf')
 
     print("Plot for time time precision created")
 
@@ -347,7 +431,7 @@ def generate_norm_norm_method_plots(df):
     df_y = (
         df[
             (df['precision'] == '64') & 
-            (df['method'] == 'QMDD')
+            (df['method'] == 'QMDDmax')
           ]
     )
 
@@ -385,7 +469,10 @@ def generate_norm_norm_method_plots(df):
     plt.xlabel('MTBDD 64 norm')
     plt.ylabel('QMDD 64 norm')
     plt.grid(True)
-    plt.savefig('benchmark/plot/norm_norm_method.pdf')
+
+   # Ensure the output directory exists
+    os.makedirs(g.PLOTS_DIR, exist_ok=True)
+    plt.savefig(g.PLOTS_DIR + f'/norm_norm_method.pdf')
 
     print("Plot for norm norm method created")
 
@@ -445,7 +532,10 @@ def generate_norm_norm_precision_plots(df):
     plt.xlabel('MTBDD 64 norm')
     plt.ylabel('MTBDD 16 norm')
     plt.grid(True)
-    plt.savefig('benchmark/plot/norm_norm_precision.pdf')
+
+   # Ensure the output directory exists
+    os.makedirs(g.PLOTS_DIR, exist_ok=True)
+    plt.savefig(g.PLOTS_DIR + f'/norm_norm_precision.pdf')
 
     print("Plot for norm norm precision created")
 
@@ -455,7 +545,7 @@ def generate_norm_norm_precision_plots(df):
 # Time and number of qubits plot
 #
 
-def generate_time_nr_qubits_plots(df):
+def generate_time_nr_qubits_plots_for_random(df):
 
     # Filter x and y axes
     df_x = (
@@ -509,7 +599,7 @@ def generate_time_nr_qubits_plots(df):
    # Ensure the output directory exists
     os.makedirs(g.PLOTS_DIR, exist_ok=True)
 
-    plt.savefig(g.PLOTS_DIR + f'time_nr_qubits_{g.PERCENTAGE_T_GATES}_percent_{g.MIN_NUM_QUBITS}_{g.MAX_NUM_QUBITS}_{g.MIN_NUM_GATES}_{g.MAX_NUM_GATES}.pdf')
+    plt.savefig(g.PLOTS_DIR + f'/time_nr_qubits_{g.PERCENTAGE_T_GATES}_percent_{g.MIN_NUM_QUBITS}_{g.MAX_NUM_QUBITS}_{g.MIN_NUM_GATES}_{g.MAX_NUM_GATES}.pdf')
 
     print("Plot for time nr_qubits created")
 
