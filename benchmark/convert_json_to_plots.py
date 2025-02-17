@@ -238,7 +238,8 @@ def generate_time_time_method_plots_for_all_benchmarks(df):
             df[
                 (df['statistics.benchmark'].str.split('_').str[0] == benchmark) & 
                 (df['precision'] == '64') & 
-                (df['method'] == 'QMDDmax')
+                (df['method'] == 'MTBDD') &
+                (df['statistics.workers'].astype(str) == '1')
             ]
 
         # Filter data for the current benchmark
@@ -246,7 +247,8 @@ def generate_time_time_method_plots_for_all_benchmarks(df):
             df[
                 (df['statistics.benchmark'].str.split('_').str[0] == benchmark) & 
                 (df['precision'] == '64') & 
-                (df['method'] == 'MTBDD')
+                (df['method'] == 'MTBDD') &
+                (df['statistics.workers'].astype(str) == '10')
             ]
 
         # Plot scatter points
@@ -260,15 +262,15 @@ def generate_time_time_method_plots_for_all_benchmarks(df):
         )
 
     # Enhance plot
-    plt.title('Wall times MTBDD and EVDD, precision 64 bit')
-    plt.xlabel('Wall time (s) EVDD')
-    plt.ylabel('Wall time (s) MTBDD')
+    plt.title('Wall times MTBDD workers=1 and 10, precision 64 bit')
+    plt.xlabel('Wall time (s) MTBDD workers= 1')
+    plt.ylabel('Wall time (s) MTBDD workers= 10')
     plt.grid(True)
     plt.legend(title='Benchmarks MQT', loc='upper left', bbox_to_anchor=(1.05, 1), fontsize='small')
 
     # Set axis ranges and scales
     plt.xscale('log')  # Logarithmic scale for x-axis
-    plt.xlim(0.0001, 10)  
+    plt.xlim(0.001, 10000)  
     plt.yscale('log')  # Logarithmic scale for y-axis
     plt.ylim(0.001, 10000)  
  
@@ -277,7 +279,7 @@ def generate_time_time_method_plots_for_all_benchmarks(df):
 
     # Ensure output directory exists
     os.makedirs(g.PLOTS_DIR, exist_ok=True)
-    plot_path = os.path.join(g.PLOTS_DIR, 'time_time_scatter_sorted.pdf')
+    plot_path = os.path.join(g.PLOTS_DIR, 'time_time_scatter_sorted_MTBDD_1_10_Sylvan.pdf')
     plt.savefig(plot_path)
     print(f"Plot for time time created, saved at {plot_path}")
         

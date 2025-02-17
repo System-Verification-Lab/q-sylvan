@@ -32,13 +32,13 @@ MAX_NUM_GATES = 4800         # Max number of gates per circuit
 STEPSIZE_NUM_GATES = 400     # Stepsize of the number of gates
 PERCENTAGE_T_GATES = 85      # Percentage T gates in quantum circuit
 
-#PRECISION = 64
-#METHOD = 'MTBDD'
-#SIM_QASM_EXE = './../build/qasm/run_qasm_on_mtbdd'
-
 PRECISION = 64
-METHOD = 'QMDDmax'
-SIM_QASM_EXE = './../build/qasm/run_qasm_on_qmdd'
+METHOD = 'MTBDD'
+SIM_QASM_EXE = './../build/qasm/run_qasm_on_mtbdd'
+
+#PRECISION = 64
+#METHOD = 'QMDDmax'
+#SIM_QASM_EXE = './../build/qasm/run_qasm_on_qmdd'
 
 # Random quantum circuits
 #QASM_DIR  = f'qasm_clifford_T_mixed_{METHOD}_{PERCENTAGE_T_GATES}_percent_{MIN_NUM_QUBITS}_{MAX_NUM_QUBITS}_{MIN_NUM_GATES}_{MAX_NUM_GATES}/'

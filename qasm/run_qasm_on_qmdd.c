@@ -24,7 +24,7 @@
 
 /**********************<Arguments (configured via argp)>***********************/
 
-static int workers = 1;
+static int workers = 14;
 static int rseed = 0;
 static bool count_nodes = false;
 static bool output_vector = false;

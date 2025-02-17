@@ -4824,9 +4824,20 @@ MTBDD mtbdd_matmat_mult(MTBDD M1, MTBDD M2, int nvars, int currentvar)
     determine_top_var_and_leafcount(b, &minvar, &maxvar, &leafcount);
     printf("b: maxvar = %d, minvar = %d, leaves = %d\n", maxvar, minvar, leafcount);
 */
-    MTBDD W00 = mtbdd_plus(
+
+//
+// SPAWN these operations, 7 spawns, 1 call, example line 800, sylvan_evbdd.c
+//   use mtbdd_refs_spawn(SPAWN(function_name,args, ...)) for let result in cache
+
+    MTBDD W00 = mtbdd_plus( // RUN()
         mtbdd_matmat_mult(M1_00, M2_00, nvars, currentvar), 
         mtbdd_matmat_mult(M1_01, M2_10, nvars, currentvar));
+
+    //
+    //MTBDD W00 = RUN(mtbdd_apply, 
+    //                mtbdd_matmat_mult(M1_00, M2_00, nvars, currentvar),
+    //                mtbdd_matmat_mult(M1_01, M2_10, nvars, currentvar),
+    //                mtbdd_op_plus);
 
     MTBDD W01 = mtbdd_plus(
         mtbdd_matmat_mult(M1_00, M2_01, nvars, currentvar), 

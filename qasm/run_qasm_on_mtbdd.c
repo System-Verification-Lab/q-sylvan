@@ -31,7 +31,7 @@
  * Arguments variables of command line interface (configured via argp).
  * 
  */
-static int workers = 1;         // Number of threads running on separate CPU core
+static int workers = 10;         // Number of threads running on separate CPU core
 static int rseed = 0;
 static int precision = MPC_PRECISION;
 static int rounding = 0;

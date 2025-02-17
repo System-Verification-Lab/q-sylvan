@@ -1307,7 +1307,7 @@ void mtbdd_split_mtbdd_into_four_parts(MTBDD M, MTBDD *M00, MTBDD *M01, MTBDD *M
  * Computes A.v for one 2^n matrix and one 2^n vector.
  * 
 */
-
+// par
 MTBDD mtbdd_matvec_mult(MTBDD M, MTBDD v, int nvars, int currentvar);
 MTBDD mtbdd_matvec_mult_alt(MTBDD M, MTBDD v, int n);
 
@@ -1318,6 +1318,7 @@ MTBDD mtbdd_matvec_mult_alt(MTBDD M, MTBDD v, int n);
  * 
 */
 
+// par
 MTBDD mtbdd_matmat_mult(MTBDD M1, MTBDD M2, int nvars, int currentvar);
 MTBDD mtbdd_matmat_mult_alt(MTBDD M1, MTBDD M2, int n);
 
@@ -1329,8 +1330,8 @@ MTBDD mtbdd_matmat_mult_alt(MTBDD M1, MTBDD M2, int n);
  * Matrix (x) Matrix product
  * 
 */
-MTBDD mtbdd_vec_tensor_prod(MTBDD v, MTBDD w, int n);
 
+MTBDD mtbdd_vec_tensor_prod(MTBDD v, MTBDD w, int n);
 MTBDD mtbdd_mat_tensor_prod(MTBDD M1, MTBDD M2, int n);
 
 /**
@@ -1344,6 +1345,8 @@ MTBDD mtbdd_mat_tensor_prod(MTBDD M1, MTBDD M2, int n);
  * 
  * @returns MTBDD encoding of 'a' tensor 'b'
  */
+
+// par
 MTBDD mtbdd_tensor_prod(MTBDD a, MTBDD b, int leaf_depth_of_a);
 
 /**
