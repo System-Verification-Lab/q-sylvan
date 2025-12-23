@@ -40,10 +40,7 @@ extern "C" {
 #define MPC_ROUNDING MPC_RNDZZ
 
 // Number of bits for the complex number
-extern uint64_t MPC_PRECISION;
-
-// Tolerance for merging MPC leaves
-extern double MPC_EQUIV_TOLERANCE;
+#define MPC_PRECISION 256
 
 // Max buffer length to handle filestrings
 #define MPC_MAXLENGTH_FILESTRING 256
@@ -56,14 +53,7 @@ extern double MPC_EQUIV_TOLERANCE;
  * Initialize MPC custom leaves
  */
 uint32_t 
-mpc_init(uint64_t precision, double tolerance);
-
-/**
- * Initialize MPC custom leaves with precision=64 and tolerance=1e-14
- */
-uint32_t
-mpc_init_default();
-
+mpc_init(void);
 
 /**
  * Assign a MPC complex number

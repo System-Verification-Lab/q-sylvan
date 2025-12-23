@@ -14,6 +14,7 @@ target_sources(qsylvan
     sylvan_common.c
     sylvan_edge_weights.c
     sylvan_edge_weights_complex.c
+    sylvan_edge_weights_qisq2.c
     sylvan_gmp.c
     sylvan_hash.c
     sylvan_ldd.c
@@ -40,6 +41,7 @@ target_sources(qsylvan
     sylvan_common.h
     sylvan_edge_weights.h
     sylvan_edge_weights_complex.h
+    sylvan_edge_weights_qisq2.h
     sylvan_gmp.h
     sylvan_hash.h
     sylvan_int.h

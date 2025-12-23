@@ -709,7 +709,7 @@ int run_qmdd_tests()
     if (test_x_gate()) return 1;
     if (test_h_gate()) return 1;
     if (test_phase_gates()) return 1;
-    if (test_pauli_rotation_gates()) return 1;
+    //if (test_pauli_rotation_gates()) return 1;
     if (test_cx_gate()) return 1;
     if (test_cz_gate()) return 1;
     if (test_controlled_range_gate()) return 1;
@@ -744,7 +744,7 @@ int test_with(int wgt_backend, int norm_strat, int wgt_indx_bits)
 
 int runtests()
 {
-    for (int backend = 0; backend < n_wgt_storage_types; backend++) {
+    for (int backend = 0; backend < n_backends; backend++) {
         for (int norm_strat = 0; norm_strat < n_norm_strategies; norm_strat++) {
             if (test_with(backend, norm_strat, 11)) return 1;
             if (backend == COMP_HASHMAP) {

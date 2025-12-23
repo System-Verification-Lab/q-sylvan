@@ -3,10 +3,12 @@
 
 #include "flt.h"
 #include "cmap.h"
+#include "qisq2_map.h"
 
 typedef enum wgt_storage_backend {
     COMP_HASHMAP,
-    n_wgt_storage_types
+    QISQ2_MAP,
+    n_backends
 } wgt_storage_backend_t;
 
 // create(uint64_t size, double tolerance)

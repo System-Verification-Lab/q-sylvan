@@ -28,19 +28,17 @@
 
 /**
  * Minor shortcomings of this parser:
- * 
  * 1) Assumes only one instruction per line
  * 2) Ignores includes
  * 3) Assumes that for given rotation angles (e.g. rz(pi/4)), the expression 
  *    between the brackets doesn't contain additional brackets.
- * 
- */
+*/
+
 
 std::vector<std::string> split(std::string to_split, std::string delims)
 {
     std::vector<std::string> result;
     std::size_t index;
-
     while(to_split.size() > 0) {
         // remove leading delims and get first non-leading delim
         while ((index = to_split.find_first_of(delims)) == 0) {
@@ -107,20 +105,16 @@ void check_measurements(quantum_circuit_t* circuit)
 class QASMParser {
 
     private:
-
         // Gates specified in qelib1.inc
         // https://github.com/Qiskit/qiskit-terra/blob/main/qiskit/qasm/libs/qelib1.inc
-
         std::vector<std::string> qelib1_gates = 
-        {
-            "u3", "u2", "u1", "id", "u0", "u", "p", "x", "y", "z", "h", "s", "sdg",
-            "t", "tdg", "rx", "ry", "rz", "sx", "sxdg",                                 // single qubit gates
-            "cx", "cz", "cy", "swap", "ch", "crx", "cry", "crz", "cu1", "cp", "cu3", 
-            "csx", "cu", "rxx", "rzz",                                                  // 2 qubit gates
-            "ccx", "cswap", "rccx",                                                     // 3 qubit gates
-            "rc3x", "c3x", "c3sx", "c3sqrtx",                                           // 4 qubit gates
-            "c4x"                                                                       // 5 qubit gates
-        }; 
+        {"u3", "u2", "u1", "id", "u0", "u", "p", "x", "y", "z", "h", "s", "sdg",
+        "t", "tdg", "rx", "ry", "rz", "sx", "sxdg", // single qubit gates
+        "cx", "cz", "cy", "swap", "ch", "crx", "cry", "crz", "cu1", "cp", "cu3", 
+        "csx", "cu", "rxx", "rzz", // 2 qubit gates
+        "ccx", "cswap", "rccx", // 3 qubit gates
+        "rc3x", "c3x", "c3sx", "c3sqrtx", // 4 qubit gates
+        "c4x"}; // 5 qubit gates
 
         enum ins_type {
             comment, version_def, include, qreg, creg, barrier, measure, gate,
@@ -130,30 +124,23 @@ class QASMParser {
         unsigned int current_line;
 
     public:
-
         typedef std::vector<std::pair<std::string, unsigned int>> registers_t;
-    
         registers_t qregisters;
         registers_t cregisters;
-    
         quantum_circuit_t *circuit;
         quantum_op_t *first_op;
         quantum_op_t *last_op;
 
+
         quantum_circuit_t* parse(char *filepath)
         {
             std::string path = std::string(filepath);
-            //std::cout << "filepath = " << filepath << std::endl;
             std::string filename = path.substr(path.find_last_of("/\\") + 1);
             std::string circname = filename.substr(0, filename.find_last_of("."));
             std::ifstream infile(filepath);
             if (!infile.is_open()) {
                 std::cerr << "Error opening file " << filepath << std::endl;
                 exit(EXIT_FAILURE);
-            }
-
-            if (!infile.is_open()) {
-                parse_error("Could not open the file!");
             }
 
             // create (blank) quantum circuit
@@ -171,7 +158,6 @@ class QASMParser {
             while (std::getline(infile, line))
             {
                 parse_line(line);
-                //std::cout << line << std::endl;
             }
 
             // if circuit has no intermediate measurements, make sure creg is
@@ -279,13 +265,12 @@ class QASMParser {
         void parse_version(std::string line)
         {
             auto args = split(line, " \t");
-
             if (args.size() > 0) {
-
-                if (!args[0].compare("OPENQASM") || !args[1].substr(0,4).compare("2.0;")) {
+                if (args[1] == "2.0;") {
                     return;
                 }
-                parse_error("Expected 'OPENQASM 2.0;', got something else instead"); // '" + args[1] + "'
+                std::cerr << "WARNING: expected OPENQASM version 2.0, "
+                      << "got \"" << args[1] << "\" instead" << std::endl;
             }
         }
 
@@ -486,7 +471,7 @@ class QASMParser {
         {
             auto args = split(line, " []->");
             if (args.size() < 4) {
-                parse_error("Expected more arguments for 'measure()'");
+                parse_error("Expected more arguments to 'measure'");
             }
             
             // put measurement info into new quantum_op_t
@@ -544,9 +529,8 @@ class QASMParser {
 
 
         void parse_error(std::string error) {
-            std::cout << "Error in qasm file, line " << current_line << ": ";
-            std::cout << error << std::endl;
-            std::cout << "Parsing stopped" << std::endl;
+            std::cerr << "Parsing error on line " << current_line << ": ";
+            std::cerr << error << std::endl;
             free_quantum_circuit(circuit);
             exit(EXIT_FAILURE);
         }
@@ -664,7 +648,6 @@ void order_cphase_gates(quantum_circuit_t *circuit)
     // Since for any controlled phase gate (cp, cz=cp(pi)) cp(c,t) = c(t,c),
     // change the order such that c < t
     // Note that crz(theta) is not symmetric
-
     quantum_op_t* head = circuit->operations;
     while (head != NULL) {
         if (head->type == op_gate) {
@@ -685,7 +668,6 @@ void order_cphase_gates(quantum_circuit_t *circuit)
 void reverse_order(quantum_circuit_t *circuit)
 {
     // remap qubit index i to qreg_size-1-i
-    
     quantum_op_t* head = circuit->operations;
     while (head != NULL) {
         if (head->type == op_gate || head->type == op_measurement) {

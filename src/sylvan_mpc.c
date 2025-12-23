@@ -21,10 +21,6 @@
 #include <math.h>
 #include <string.h>
 
-uint64_t MPC_PRECISION;
-double MPC_EQUIV_TOLERANCE;
-mpfr_t MPC_EQUIV_TOLERANCE_MPFR;
-
 /**
  * helper function for hash (skip)
  */
@@ -71,9 +67,6 @@ mpc_hash(const uint64_t val, const uint64_t seed)
 
     // Convert the real part from mpc to long double type (16 x 8 bits = 128 bits) 
     long double real_limited = mpfr_get_ld(real, MPC_ROUNDING);
-    if (MPC_EQUIV_TOLERANCE != 0) {
-        real_limited = round(real_limited / MPC_EQUIV_TOLERANCE) * MPC_EQUIV_TOLERANCE;
-    }
 
     // Convert the limited real part in long double to an array of bytes 
     // (16 bytes in AMD64, but GCC only uses 10 of these...) 
@@ -106,9 +99,6 @@ mpc_hash(const uint64_t val, const uint64_t seed)
 
     // Convert the imaginary part from mpc to long double type (16 x 8 bits = 128 bits) 
     long double imag_limited = mpfr_get_ld(imag, MPC_ROUNDING);
-    if (MPC_EQUIV_TOLERANCE != 0) {
-        imag_limited = round(imag_limited / MPC_EQUIV_TOLERANCE) * MPC_EQUIV_TOLERANCE;
-    }
 
     // Convert the limited imaginary part in long double (16 bytes in ARM64) to an array of bytes
     memcpy(bytes, &imag_limited, gcc_long_double_bytes);
@@ -218,13 +208,8 @@ mpc_read_binary(FILE* in, uint64_t *val)
  * Initialize mpc custom leaves
  */
 uint32_t
-mpc_init(uint64_t precision, double tolerance)
+mpc_init()
 {
-    MPC_PRECISION = precision;
-    MPC_EQUIV_TOLERANCE = tolerance;
-    mpfr_init2(MPC_EQUIV_TOLERANCE_MPFR, MPC_PRECISION);
-    mpfr_set_d(MPC_EQUIV_TOLERANCE_MPFR, tolerance, MPC_ROUNDING);
-
     // Register custom leaf type callback functions
     uint32_t mpc_type = sylvan_mt_create_type();
     assert(mpc_type == MPC_TYPE);
@@ -241,12 +226,6 @@ mpc_init(uint64_t precision, double tolerance)
     sylvan_mt_set_read_binary(mpc_type, NULL);    // mpc_read_binary);
 
     return mpc_type;
-}
-
-uint32_t
-mpc_init_default()
-{
-    return mpc_init(64, 1e-14);
 }
 
 /**
@@ -294,12 +273,10 @@ mpc_assign_const_pi(mpc_ptr mpc_const_pi)
 void
 mpc_sqrt_assign(mpc_ptr mpc_sqrt_z, double real, double imag)
 {
-    mpc_t z;
+    mpc_ptr z = NULL;
     mpc_init2(z, MPC_PRECISION);
     mpc_set_ld_ld(z, real, imag, MPC_ROUNDING);
-    mpc_init2(mpc_sqrt_z, MPC_PRECISION);
     mpc_sqrt(mpc_sqrt_z, z, MPC_ROUNDING);
-    mpc_clear(z);
     
     return;
 
@@ -357,50 +334,10 @@ mpc_divide(mpc_ptr x, mpc_ptr z1, mpc_ptr z2)
 int
 mpc_compare(const uint64_t z1, const uint64_t z2)
 {
-    if (MPC_EQUIV_TOLERANCE == 0) {
-        mpc_ptr x = (mpc_ptr)(size_t)z1;
-        mpc_ptr y = (mpc_ptr)(size_t)z2;
+    mpc_ptr x = (mpc_ptr)(size_t)z1;
+    mpc_ptr y = (mpc_ptr)(size_t)z2;
 
-        return !mpc_cmp(x, y);  // mpc_cmp == 0 if x == y
-    }
-    else {
-        mpc_ptr x = (mpc_ptr)(size_t)z1;
-        mpc_ptr y = (mpc_ptr)(size_t)z2;        
-
-        // check |x.r - y.r| < epsilon 
-        mpfr_t real_x, real_y, diff_r;
-        mpfr_init2(real_x, MPC_PRECISION);
-        mpc_real(real_x, x, MPC_ROUNDING);
-        mpfr_init2(diff_r, MPC_PRECISION);
-        mpfr_init2(real_y, MPC_PRECISION);
-        mpc_real(real_y, y, MPC_ROUNDING);
-        mpfr_sub(diff_r, real_x, real_y, MPC_ROUNDING);
-        int cmp_real = mpfr_cmp(diff_r, MPC_EQUIV_TOLERANCE_MPFR);
-        mpfr_clear(real_x);
-        mpfr_clear(real_y);
-        mpfr_clear(diff_r);
-        if (cmp_real > 0) {
-            return false;
-        }
-
-        // |x.i - y.i| < epsilon
-        mpfr_t imag_x, imag_y, diff_i;
-        mpfr_init2(imag_x, MPC_PRECISION);
-        mpc_imag(imag_x, x, MPC_ROUNDING);
-        mpfr_init2(imag_y, MPC_PRECISION);
-        mpc_imag(imag_y, y, MPC_ROUNDING);
-        mpfr_init2(diff_i, MPC_PRECISION);
-        mpfr_sub(diff_i, imag_x, imag_x, MPC_ROUNDING);
-        int cmp_imag = mpfr_cmp(diff_i, MPC_EQUIV_TOLERANCE_MPFR);
-        mpfr_clear(imag_x);
-        mpfr_clear(imag_y);
-        mpfr_clear(diff_i);
-        if (cmp_imag > 0) {
-            return false;
-        }
-
-        return true;
-    }
+    return !mpc_cmp(x, y);  // mpc_cmp == 0 if x == y
 }
 
 /**
